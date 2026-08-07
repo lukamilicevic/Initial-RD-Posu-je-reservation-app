@@ -93,8 +93,18 @@ export function ReservationPanel({
         await onCreate(position.id, values);
       }
       onClose();
-    } catch {
-      setError('Spremanje nije uspjelo. Pokušajte ponovo.');
+    } catch (error) {
+      let message = 'Pokušajte ponovo.';
+      if (error instanceof Error) {
+        message = error.message;
+      } else if (error && typeof error === 'object') {
+        if ('message' in error && typeof (error as any).message === 'string') {
+          message = (error as any).message;
+        } else {
+          message = JSON.stringify(error);
+        }
+      }
+      setError(`Spremanje nije uspjelo. ${message}`);
     }
   };
 
