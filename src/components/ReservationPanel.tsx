@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import { addDays, toLocalDateString } from '../utils/date';
 import type { Position, Reservation, ReservationFormValues } from '../types';
 
 interface ReservationPanelProps {
@@ -68,6 +69,8 @@ export function ReservationPanel({
     return 'Ovaj položaj je slobodan. Unesite podatke za rezervaciju.';
   }, [reservation, upcomingReservation]);
 
+  const maxArrivalDate = addDays(new Date(), 3);
+
   const handleSave = async (values: ReservationFormValues) => {
     if (!values.arriveDate || !values.leaveDate) {
       setError('Unesite oba datuma dolaska i odlaska.');
@@ -76,6 +79,11 @@ export function ReservationPanel({
 
     if (values.arriveDate > values.leaveDate) {
       setError('Datum dolaska mora biti prije ili jednak datumu odlaska.');
+      return;
+    }
+
+    if (values.arriveDate > maxArrivalDate) {
+      setError(`Datum dolaska mora biti najkasnije ${toLocalDateString(maxArrivalDate)}.`);
       return;
     }
 
@@ -231,14 +239,18 @@ export function ReservationPanel({
                     control={control}
                     rules={{ required: true }}
                     render={({ field }) => (
-                      <DatePicker
-                        selected={field.value}
-                        onChange={(date) => field.onChange(date)}
-                        className="mt-2 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition focus:border-deep-green focus:ring-2 focus:ring-deep-green/20"
-                        minDate={new Date()}
-                        placeholderText="Odaberite datum"
-                        dateFormat="dd.MM.yyyy"
-                      />
+                      <>
+                        <DatePicker
+                          selected={field.value}
+                          onChange={(date) => field.onChange(date)}
+                          className="mt-2 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition focus:border-deep-green focus:ring-2 focus:ring-deep-green/20"
+                          minDate={new Date()}
+                          maxDate={maxArrivalDate}
+                          placeholderText="Odaberite datum"
+                          dateFormat="dd.MM.yyyy"
+                        />
+                        <p className="mt-2 text-xs text-slate-500">Najkasnije možete rezervirati dolazak do {toLocalDateString(maxArrivalDate)}.</p>
+                      </>
                     )}
                   />
                 </label>
