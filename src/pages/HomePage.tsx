@@ -13,6 +13,7 @@ export function HomePage() {
   const { reservations, addReservation, editReservation, removeReservation, completeReservation, hasConflict } = useReservations();
   const [selectedPosition, setSelectedPosition] = useState<Position | null>(null);
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
+  const [selectedUpcomingReservation, setSelectedUpcomingReservation] = useState<Reservation | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminError, setAdminError] = useState('');
 
@@ -32,11 +33,17 @@ export function HomePage() {
   const freeCount = Math.max(positions.length - reserveCount, 0);
 
   const handlePinSelect = (position: Position) => {
-    const reservation = reservations
-      .filter((item) => item.positionId === position.id && !item.completed)
+    const positionReservations = reservations.filter((item) => item.positionId === position.id && !item.completed);
+    const activeReservation = positionReservations.find(
+      (reservation) => reservation.arriveDate <= today && today <= reservation.leaveDate
+    ) ?? null;
+    const upcomingReservation = positionReservations
+      .filter((reservation) => reservation.arriveDate > today)
       .sort((a, b) => a.arriveDate.localeCompare(b.arriveDate))[0] ?? null;
+
     setSelectedPosition(position);
-    setSelectedReservation(reservation);
+    setSelectedReservation(activeReservation);
+    setSelectedUpcomingReservation(upcomingReservation);
   };
 
   const handleReservationSelect = (reservationId: string) => {
@@ -50,6 +57,7 @@ export function HomePage() {
     }
     setSelectedPosition(position);
     setSelectedReservation(reservation);
+    setSelectedUpcomingReservation(null);
   };
 
   const handleAdminLogin = (password: string) => {
@@ -70,6 +78,7 @@ export function HomePage() {
   const clearSelection = () => {
     setSelectedPosition(null);
     setSelectedReservation(null);
+    setSelectedUpcomingReservation(null);
   };
 
   const handleCreateReservation = async (positionId: number, values: ReservationFormValues) => {
@@ -165,6 +174,7 @@ export function HomePage() {
         <ReservationPanel
           position={selectedPosition}
           reservation={selectedReservation}
+          upcomingReservation={selectedUpcomingReservation}
           isAdmin={isAdmin}
           onClose={clearSelection}
           onCreate={handleCreateReservation}
