@@ -1,10 +1,24 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { Reservation } from '../types';
 
-const SUPABASE_URL =
+function normalizeSupabaseUrl(value: string): string {
+  const trimmed = value.trim();
+  const withoutTrailingSlash = trimmed.replace(/\/+$/, '');
+  const withoutRest = withoutTrailingSlash.replace(/\/(?:rest\/v1|auth\/v1)$/i, '');
+  if (withoutRest !== withoutTrailingSlash) {
+    console.warn(
+      'Supabase URL contains an extra path segment like /rest/v1 or /auth/v1. Using the base project URL instead.'
+    );
+  }
+  return withoutRest;
+}
+
+const rawSupabaseUrl =
   import.meta.env.VITE_SUPABASE_URL ??
   import.meta.env.NEXT_PUBLIC_SUPABASE_URL ??
-  import.meta.env.SUPABASE_URL;
+  import.meta.env.SUPABASE_URL ??
+  '';
+const SUPABASE_URL = rawSupabaseUrl ? normalizeSupabaseUrl(rawSupabaseUrl) : '';
 
 const rawSupabaseKeys = [
   import.meta.env.VITE_SUPABASE_ANON_KEY,
@@ -21,10 +35,20 @@ function isSecretSupabaseKey(key: string) {
 const SUPABASE_ANON_KEY = rawSupabaseKeys.find((key) => !isSecretSupabaseKey(key));
 const SECRET_SUPABASE_KEY = rawSupabaseKeys.find((key) => isSecretSupabaseKey(key));
 
+if (!SUPABASE_URL) {
+  console.warn(
+    'Supabase URL nije konfiguriran. Provjerite VITE_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_URL ili SUPABASE_URL.'
+  );
+}
+if (!SUPABASE_ANON_KEY) {
+  console.warn(
+    'Supabase anon key nije konfiguriran. Provjerite VITE_SUPABASE_ANON_KEY, NEXT_PUBLIC_SUPABASE_ANON_KEY ili SUPABASE_ANON_KEY.'
+  );
+}
+
 if (!SUPABASE_ANON_KEY && SECRET_SUPABASE_KEY) {
   console.warn(
-    'Supabase frontend has a secret API key configured. Use a browser-safe anon key instead:' +
-      ' VITE_SUPABASE_ANON_KEY or NEXT_PUBLIC_SUPABASE_ANON_KEY.'
+    'Supabase frontend has a secret API key configured. Use a browser-safe anon key instead: VITE_SUPABASE_ANON_KEY or NEXT_PUBLIC_SUPABASE_ANON_KEY.'
   );
 }
 
