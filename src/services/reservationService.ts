@@ -37,8 +37,17 @@ const sampleReservations: Reservation[] = [
   }
 ];
 
+import { toLocalDateString } from '../utils/date';
+
 function normalizeDate(date: Date): string {
-  return date.toISOString().slice(0, 10);
+  return toLocalDateString(date);
+}
+
+function generateReservationId(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return `r${Date.now()}`;
 }
 
 function loadLocalReservations(): Reservation[] {
@@ -65,7 +74,8 @@ export const reservationService = {
     if (hasRemoteBackend) {
       try {
         return await fetchRemoteReservations();
-      } catch {
+      } catch (error) {
+        console.error('Supabase load failed, falling back to local reservations.', error);
         return loadLocalReservations();
       }
     }
@@ -95,7 +105,7 @@ export const reservationService = {
 
   async createReservation(positionId: number, values: ReservationFormValues): Promise<Reservation> {
     const reservation: Reservation = {
-      id: `r${Date.now()}`,
+      id: generateReservationId(),
       positionId,
       firstName: values.firstName.trim(),
       lastName: values.lastName.trim(),
