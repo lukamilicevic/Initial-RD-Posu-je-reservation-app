@@ -34,7 +34,7 @@ export function ReservationPanel({
 }: ReservationPanelProps) {
   const [error, setError] = useState('');
 
-  const { control, handleSubmit, reset } = useForm<ReservationFormValues>({
+  const { control, handleSubmit, reset, watch } = useForm<ReservationFormValues>({
     defaultValues: {
       firstName: reservation?.firstName ?? '',
       lastName: reservation?.lastName ?? '',
@@ -70,6 +70,8 @@ export function ReservationPanel({
   }, [reservation, upcomingReservation]);
 
   const maxArrivalDate = addDays(new Date(), 3);
+  const watchArriveDate = watch('arriveDate');
+  const maxLeaveDate = watchArriveDate ? addDays(watchArriveDate, 3) : addDays(new Date(), 3);
 
   const handleSave = async (values: ReservationFormValues) => {
     if (!values.arriveDate || !values.leaveDate) {
@@ -84,6 +86,11 @@ export function ReservationPanel({
 
     if (values.arriveDate > maxArrivalDate) {
       setError(`Datum dolaska mora biti najkasnije ${toLocalDateString(maxArrivalDate)}.`);
+      return;
+    }
+
+    if (values.leaveDate > addDays(values.arriveDate, 3)) {
+      setError('Rezervacija može trajati najviše 4 dana. Odaberite raniji datum odlaska.');
       return;
     }
 
@@ -261,14 +268,18 @@ export function ReservationPanel({
                     control={control}
                     rules={{ required: true }}
                     render={({ field }) => (
-                      <DatePicker
-                        selected={field.value}
-                        onChange={(date) => field.onChange(date)}
-                        className="mt-2 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition focus:border-deep-green focus:ring-2 focus:ring-deep-green/20"
-                        minDate={field.value ?? new Date()}
-                        placeholderText="Odaberite datum"
-                        dateFormat="dd.MM.yyyy"
-                      />
+                      <>
+                        <DatePicker
+                          selected={field.value}
+                          onChange={(date) => field.onChange(date)}
+                          className="mt-2 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition focus:border-deep-green focus:ring-2 focus:ring-deep-green/20"
+                          minDate={watchArriveDate ?? new Date()}
+                          maxDate={maxLeaveDate}
+                          placeholderText="Odaberite datum"
+                          dateFormat="dd.MM.yyyy"
+                        />
+                        <p className="mt-2 text-xs text-slate-500">Najdulje trajanje rezervacije je 4 dana.</p>
+                      </>
                     )}
                   />
                 </label>
