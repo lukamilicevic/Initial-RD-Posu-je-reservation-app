@@ -7,6 +7,7 @@ import type { Position, Reservation, ReservationFormValues } from '../types';
 interface ReservationPanelProps {
   position: Position;
   reservation: Reservation | null;
+  upcomingReservation: Reservation | null;
   isAdmin: boolean;
   onClose: () => void;
   onCreate: (positionId: number, values: ReservationFormValues) => Promise<Reservation | void>;
@@ -21,6 +22,7 @@ const formatDate = (value: string) => new Date(value).toLocaleDateString('hr-HR'
 export function ReservationPanel({
   position,
   reservation,
+  upcomingReservation,
   isAdmin,
   onClose,
   onCreate,
@@ -57,11 +59,14 @@ export function ReservationPanel({
   }, [reservation, reset]);
 
   const reservationMessage = useMemo(() => {
-    if (!reservation) {
-      return 'Ovaj položaj je slobodan. Unesite podatke za rezervaciju.';
+    if (reservation) {
+      return `Pozicija je rezervirana od ${formatDate(reservation.arriveDate)} do ${formatDate(reservation.leaveDate)}.`;
     }
-    return `Pozicija je rezervirana od ${formatDate(reservation.arriveDate)} do ${formatDate(reservation.leaveDate)}.`;
-  }, [reservation]);
+    if (upcomingReservation) {
+      return `Pozicija je trenutno slobodna. Sljedeća rezervacija počinje ${formatDate(upcomingReservation.arriveDate)}.`;
+    }
+    return 'Ovaj položaj je slobodan. Unesite podatke za rezervaciju.';
+  }, [reservation, upcomingReservation]);
 
   const handleSave = async (values: ReservationFormValues) => {
     if (!values.arriveDate || !values.leaveDate) {
@@ -128,6 +133,23 @@ export function ReservationPanel({
             <div className="sm:col-span-2">
               <p className="text-sm uppercase tracking-[0.24em] text-slate-500">Napomena</p>
               <p className="mt-2 text-slate-700">{reservation.notes || 'Nema dodatnih napomena.'}</p>
+            </div>
+          </div>
+        ) : null}
+
+        {upcomingReservation && !reservation ? (
+          <div className="grid gap-4 rounded-3xl bg-white p-6 shadow-soft ring-1 ring-slate-200 sm:grid-cols-2">
+            <div>
+              <p className="text-sm uppercase tracking-[0.24em] text-slate-500">Sljedeća rezervacija</p>
+              <p className="mt-2 text-lg font-semibold text-slate-900">{formatDate(upcomingReservation.arriveDate)} – {formatDate(upcomingReservation.leaveDate)}</p>
+            </div>
+            <div>
+              <p className="text-sm uppercase tracking-[0.24em] text-slate-500">Ime i prezime</p>
+              <p className="mt-2 text-lg text-slate-900">{upcomingReservation.firstName} {upcomingReservation.lastName}</p>
+            </div>
+            <div className="sm:col-span-2">
+              <p className="text-sm uppercase tracking-[0.24em] text-slate-500">Napomena</p>
+              <p className="mt-2 text-slate-700">{upcomingReservation.notes || 'Nema dodatnih napomena.'}</p>
             </div>
           </div>
         ) : null}
