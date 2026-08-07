@@ -1,5 +1,5 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import type { Reservation } from '../types';
+import type { Reservation, SpinAnnouncement } from '../types';
 
 function normalizeSupabaseUrl(value: string): string {
   const trimmed = value.trim();
@@ -90,6 +90,17 @@ function toSnakeCaseReservation(reservation: Reservation) {
     persons: reservation.persons,
     notes: reservation.notes,
     completed: reservation.completed
+  };
+}
+
+function toSpinAnnouncement(row: any): SpinAnnouncement {
+  return {
+    id: row.id,
+    side: row.side,
+    firstName: row.first_name ?? row.firstName,
+    lastName: row.last_name ?? row.lastName,
+    phone: row.phone,
+    arrivalDate: row.arrival_date ?? row.arrivalDate
   };
 }
 
@@ -229,6 +240,59 @@ export async function markRemoteReservationCompleted(id: string): Promise<void> 
     .update({ completed: true })
     .eq('id', id);
 
+  if (error) {
+    throw error;
+  }
+}
+
+export async function fetchRemoteSpinAnnouncements(): Promise<SpinAnnouncement[]> {
+  if (!supabaseClient) {
+    throw new Error('Supabase nije konfiguriran.');
+  }
+
+  const { data, error } = await supabaseClient
+    .from('spin_announcements')
+    .select('*')
+    .order('arrival_date', { ascending: true });
+
+  if (error) {
+    throw error;
+  }
+
+  return (data ?? []).map(toSpinAnnouncement);
+}
+
+export async function addRemoteSpinAnnouncement(announcement: SpinAnnouncement): Promise<SpinAnnouncement> {
+  if (!supabaseClient) {
+    throw new Error('Supabase nije konfiguriran.');
+  }
+
+  const { data, error } = await supabaseClient
+    .from('spin_announcements')
+    .insert({
+      id: announcement.id,
+      side: announcement.side,
+      first_name: announcement.firstName,
+      last_name: announcement.lastName,
+      phone: announcement.phone,
+      arrival_date: announcement.arrivalDate
+    })
+    .select()
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return toSpinAnnouncement(data);
+}
+
+export async function deleteRemoteSpinAnnouncement(id: string): Promise<void> {
+  if (!supabaseClient) {
+    throw new Error('Supabase nije konfiguriran.');
+  }
+
+  const { error } = await supabaseClient.from('spin_announcements').delete().eq('id', id);
   if (error) {
     throw error;
   }
