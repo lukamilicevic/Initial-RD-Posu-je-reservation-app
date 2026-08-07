@@ -5,12 +5,28 @@ const SUPABASE_URL =
   import.meta.env.VITE_SUPABASE_URL ??
   import.meta.env.NEXT_PUBLIC_SUPABASE_URL ??
   import.meta.env.SUPABASE_URL;
-const SUPABASE_ANON_KEY =
-  import.meta.env.VITE_SUPABASE_ANON_KEY ??
-  import.meta.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
-  import.meta.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
-  import.meta.env.SUPABASE_ANON_KEY ??
-  import.meta.env.SUPABASE_PUBLISHABLE_KEY;
+
+const rawSupabaseKeys = [
+  import.meta.env.VITE_SUPABASE_ANON_KEY,
+  import.meta.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  import.meta.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+  import.meta.env.SUPABASE_ANON_KEY,
+  import.meta.env.SUPABASE_PUBLISHABLE_KEY
+].filter(Boolean) as string[];
+
+function isSecretSupabaseKey(key: string) {
+  return key.startsWith('sb_secret_') || key.toLowerCase().includes('service_role');
+}
+
+const SUPABASE_ANON_KEY = rawSupabaseKeys.find((key) => !isSecretSupabaseKey(key));
+const SECRET_SUPABASE_KEY = rawSupabaseKeys.find((key) => isSecretSupabaseKey(key));
+
+if (!SUPABASE_ANON_KEY && SECRET_SUPABASE_KEY) {
+  console.warn(
+    'Supabase frontend has a secret API key configured. Use a browser-safe anon key instead:' +
+      ' VITE_SUPABASE_ANON_KEY or NEXT_PUBLIC_SUPABASE_ANON_KEY.'
+  );
+}
 
 const supabaseClient: SupabaseClient | null =
   SUPABASE_URL && SUPABASE_ANON_KEY
