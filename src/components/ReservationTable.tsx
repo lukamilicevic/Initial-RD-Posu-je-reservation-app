@@ -24,7 +24,7 @@ export function ReservationTable({ reservations, isAdmin, onEdit, onDelete, onCo
     return reservations
       .filter((reservation) => {
         const isExpired = reservation.leaveDate < today;
-        if (isExpired) {
+        if (isExpired || reservation.completed) {
           return false;
         }
 
@@ -159,3 +159,4 @@ export function ReservationTable({ reservations, isAdmin, onEdit, onDelete, onCo
     </div>
   );
 }
+
