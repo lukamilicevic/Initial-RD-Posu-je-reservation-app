@@ -3,18 +3,23 @@ import { positions } from '../data/positions';
 import { MapViewer } from '../components/MapViewer';
 import { ReservationPanel } from '../components/ReservationPanel';
 import { ReservationTable } from '../components/ReservationTable';
+import { SpinAnnouncementPanel } from '../components/SpinAnnouncementPanel';
+import { SpinAnnouncementTable } from '../components/SpinAnnouncementTable';
 import { AdminLogin } from '../components/AdminLogin';
 import { StatusStats } from '../components/StatusStats';
 import { useReservations } from '../hooks/useReservations';
+import { useSpinAnnouncements } from '../hooks/useSpinAnnouncements';
 import { authService } from '../services/authService';
 import { getTodayLocalDateString } from '../utils/date';
-import type { Position, ReservationFormValues, Reservation } from '../types';
+import type { Position, ReservationFormValues, Reservation, SpinSide } from '../types';
 
 export function HomePage() {
   const { reservations, addReservation, editReservation, removeReservation, completeReservation, hasConflict } = useReservations();
+  const { announcements, addAnnouncement, removeAnnouncement } = useSpinAnnouncements();
   const [selectedPosition, setSelectedPosition] = useState<Position | null>(null);
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
   const [selectedUpcomingReservation, setSelectedUpcomingReservation] = useState<Reservation | null>(null);
+  const [selectedSpinSide, setSelectedSpinSide] = useState<SpinSide | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminError, setAdminError] = useState('');
 
@@ -82,6 +87,13 @@ export function HomePage() {
     setSelectedUpcomingReservation(null);
   };
 
+  const handleCreateAnnouncement = async (firstName: string, lastName: string, phone: string, arrivalDate: Date) => {
+    if (!selectedSpinSide) {
+      return;
+    }
+    await addAnnouncement(selectedSpinSide, firstName, lastName, phone, arrivalDate);
+  };
+
   const handleCreateReservation = async (positionId: number, values: ReservationFormValues) => {
     await addReservation(positionId, values);
   };
@@ -121,7 +133,13 @@ export function HomePage() {
 
         <section className="grid gap-6 lg:grid-cols-[1.4fr_0.8fr] min-w-0">
           <div className="space-y-6 min-w-0">
-            <MapViewer positions={positions} reservations={reservations} onSelect={handlePinSelect} selectedPositionId={selectedPosition?.id ?? null} />
+            <MapViewer
+              positions={positions}
+              reservations={reservations}
+              onSelect={handlePinSelect}
+              onSpinAnnouncement={setSelectedSpinSide}
+              selectedPositionId={selectedPosition?.id ?? null}
+            />
             <div className="rounded-[2rem] bg-white p-6 shadow-soft ring-1 ring-slate-200">
               <StatusStats reservations={reservations} totalPositions={positions.length} />
             </div>
@@ -132,6 +150,7 @@ export function HomePage() {
               onDelete={handleDeleteReservation}
               onComplete={handleMarkCompleted}
             />
+            <SpinAnnouncementTable announcements={announcements} isAdmin={isAdmin} onDelete={removeAnnouncement} />
           </div>
 
           <aside className="space-y-6 min-w-0">
@@ -183,6 +202,13 @@ export function HomePage() {
           onDelete={handleDeleteReservation}
           onMarkCompleted={handleMarkCompleted}
           hasConflict={hasConflict}
+        />
+      ) : null}
+      {selectedSpinSide ? (
+        <SpinAnnouncementPanel
+          side={selectedSpinSide}
+          onClose={() => setSelectedSpinSide(null)}
+          onCreate={handleCreateAnnouncement}
         />
       ) : null}
     </div>
