@@ -60,6 +60,10 @@ const supabaseClient: SupabaseClient | null =
 export const hasRemoteBackend = Boolean(supabaseClient);
 
 function toCamelCaseReservation(row: any): Reservation {
+  if (!row) {
+    throw new Error('Supabase response is empty. Provjerite shemu tablice i vraćanje podataka.');
+  }
+
   return {
     id: row.id,
     positionId: row.positionId ?? row.position_id,
@@ -89,6 +93,20 @@ function toSnakeCaseReservation(reservation: Reservation) {
   };
 }
 
+async function fetchReservationById(id: string): Promise<Reservation> {
+  const { data, error } = await supabaseClient!
+    .from('reservations')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return toCamelCaseReservation(data);
+}
+
 async function tryInsertReservation(reservation: Reservation): Promise<Reservation> {
   const { data, error } = await supabaseClient!
     .from('reservations')
@@ -96,7 +114,10 @@ async function tryInsertReservation(reservation: Reservation): Promise<Reservati
     .single();
 
   if (!error) {
-    return toCamelCaseReservation(data);
+    if (data) {
+      return toCamelCaseReservation(data);
+    }
+    return await fetchReservationById(reservation.id);
   }
 
   if (/arrivedate|leaveDate|positionId|firstName|lastName|unknown column/i.test(error.message)) {
@@ -109,7 +130,10 @@ async function tryInsertReservation(reservation: Reservation): Promise<Reservati
       throw snakeError;
     }
 
-    return toCamelCaseReservation(snakeData);
+    if (snakeData) {
+      return toCamelCaseReservation(snakeData);
+    }
+    return await fetchReservationById(reservation.id);
   }
 
   throw error;
@@ -123,7 +147,10 @@ async function tryUpdateReservation(reservation: Reservation): Promise<Reservati
     .single();
 
   if (!error) {
-    return toCamelCaseReservation(data);
+    if (data) {
+      return toCamelCaseReservation(data);
+    }
+    return await fetchReservationById(reservation.id);
   }
 
   if (/arrivedate|leaveDate|positionId|firstName|lastName|unknown column/i.test(error.message)) {
@@ -137,7 +164,10 @@ async function tryUpdateReservation(reservation: Reservation): Promise<Reservati
       throw snakeError;
     }
 
-    return toCamelCaseReservation(snakeData);
+    if (snakeData) {
+      return toCamelCaseReservation(snakeData);
+    }
+    return await fetchReservationById(reservation.id);
   }
 
   throw error;
@@ -149,7 +179,7 @@ async function trySelectReservations(): Promise<Reservation[]> {
     throw error;
   }
 
-  const reservations = (data ?? []).map(toCamelCaseReservation);
+  const reservations = (data ?? []).map((row) => toCamelCaseReservation(row));
   return reservations.sort((a, b) => a.arriveDate.localeCompare(b.arriveDate));
 }
 
