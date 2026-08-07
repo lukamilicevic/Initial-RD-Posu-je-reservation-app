@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { TransformComponent, TransformWrapper } from 'react-zoom-pan-pinch';
 import type { Position, Reservation } from '../types';
+import { getTodayLocalDateString } from '../utils/date';
 import lakeMap from '../assets/lake-photo.png';
 
 interface MapViewerProps {
@@ -12,7 +13,7 @@ interface MapViewerProps {
 
 export function MapViewer({ positions, reservations, onSelect, selectedPositionId }: MapViewerProps) {
   const [scale, setScale] = useState(1);
-  const today = new Date().toISOString().slice(0, 10);
+  const today = getTodayLocalDateString();
   const reservedIds = new Set(
     reservations
       .filter((reservation) => !reservation.completed && reservation.arriveDate <= today && today <= reservation.leaveDate)
