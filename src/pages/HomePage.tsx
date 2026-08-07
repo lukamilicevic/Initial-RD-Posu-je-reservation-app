@@ -7,6 +7,7 @@ import { AdminLogin } from '../components/AdminLogin';
 import { StatusStats } from '../components/StatusStats';
 import { useReservations } from '../hooks/useReservations';
 import { authService } from '../services/authService';
+import { getTodayLocalDateString } from '../utils/date';
 import type { Position, ReservationFormValues, Reservation } from '../types';
 
 export function HomePage() {
@@ -17,7 +18,7 @@ export function HomePage() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminError, setAdminError] = useState('');
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = getTodayLocalDateString();
 
   const activeReservedIds = useMemo(
     () =>
@@ -118,8 +119,8 @@ export function HomePage() {
           </div>
         </header>
 
-        <section className="grid gap-6 lg:grid-cols-[1.4fr_0.8fr]">
-          <div className="space-y-6">
+        <section className="grid gap-6 lg:grid-cols-[1.4fr_0.8fr] min-w-0">
+          <div className="space-y-6 min-w-0">
             <MapViewer positions={positions} reservations={reservations} onSelect={handlePinSelect} selectedPositionId={selectedPosition?.id ?? null} />
             <div className="rounded-[2rem] bg-white p-6 shadow-soft ring-1 ring-slate-200">
               <StatusStats reservations={reservations} totalPositions={positions.length} />
@@ -133,7 +134,7 @@ export function HomePage() {
             />
           </div>
 
-          <aside className="space-y-6">
+          <aside className="space-y-6 min-w-0">
             <div className="rounded-[2rem] bg-white p-6 shadow-soft ring-1 ring-slate-200">
               <h2 className="text-xl font-semibold text-slate-900">Status lokacije</h2>
               <p className="mt-3 text-slate-600">Kliknite pin na karti i otvorite detalje pozicije.</p>
