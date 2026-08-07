@@ -5,6 +5,12 @@ export function toLocalDateString(date: Date): string {
   return `${year}-${month}-${day}`;
 }
 
+export function addDays(date: Date, days: number): Date {
+  const result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return result;
+}
+
 export function getTodayLocalDateString(): string {
   return toLocalDateString(new Date());
 }
