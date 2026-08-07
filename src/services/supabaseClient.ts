@@ -59,21 +59,106 @@ const supabaseClient: SupabaseClient | null =
 
 export const hasRemoteBackend = Boolean(supabaseClient);
 
+function toCamelCaseReservation(row: any): Reservation {
+  return {
+    id: row.id,
+    positionId: row.positionId ?? row.position_id,
+    firstName: row.firstName ?? row.first_name,
+    lastName: row.lastName ?? row.last_name,
+    phone: row.phone,
+    arriveDate: row.arriveDate ?? row.arrive_date,
+    leaveDate: row.leaveDate ?? row.leave_date,
+    persons: row.persons ?? row.persons,
+    notes: row.notes,
+    completed: row.completed
+  };
+}
+
+function toSnakeCaseReservation(reservation: Reservation) {
+  return {
+    id: reservation.id,
+    position_id: reservation.positionId,
+    first_name: reservation.firstName,
+    last_name: reservation.lastName,
+    phone: reservation.phone,
+    arrive_date: reservation.arriveDate,
+    leave_date: reservation.leaveDate,
+    persons: reservation.persons,
+    notes: reservation.notes,
+    completed: reservation.completed
+  };
+}
+
+async function tryInsertReservation(reservation: Reservation): Promise<Reservation> {
+  const { data, error } = await supabaseClient!
+    .from('reservations')
+    .insert(reservation)
+    .single();
+
+  if (!error) {
+    return toCamelCaseReservation(data);
+  }
+
+  if (/arrivedate|leaveDate|positionId|firstName|lastName|unknown column/i.test(error.message)) {
+    const { data: snakeData, error: snakeError } = await supabaseClient!
+      .from('reservations')
+      .insert(toSnakeCaseReservation(reservation))
+      .single();
+
+    if (snakeError) {
+      throw snakeError;
+    }
+
+    return toCamelCaseReservation(snakeData);
+  }
+
+  throw error;
+}
+
+async function tryUpdateReservation(reservation: Reservation): Promise<Reservation> {
+  const { data, error } = await supabaseClient!
+    .from('reservations')
+    .update(reservation)
+    .eq('id', reservation.id)
+    .single();
+
+  if (!error) {
+    return toCamelCaseReservation(data);
+  }
+
+  if (/arrivedate|leaveDate|positionId|firstName|lastName|unknown column/i.test(error.message)) {
+    const { data: snakeData, error: snakeError } = await supabaseClient!
+      .from('reservations')
+      .update(toSnakeCaseReservation(reservation))
+      .eq('id', reservation.id)
+      .single();
+
+    if (snakeError) {
+      throw snakeError;
+    }
+
+    return toCamelCaseReservation(snakeData);
+  }
+
+  throw error;
+}
+
+async function trySelectReservations(): Promise<Reservation[]> {
+  const { data, error } = await supabaseClient!.from('reservations').select('*');
+  if (error) {
+    throw error;
+  }
+
+  const reservations = (data ?? []).map(toCamelCaseReservation);
+  return reservations.sort((a, b) => a.arriveDate.localeCompare(b.arriveDate));
+}
+
 export async function fetchRemoteReservations(): Promise<Reservation[]> {
   if (!supabaseClient) {
     throw new Error('Supabase nije konfiguriran.');
   }
 
-  const { data, error } = await supabaseClient
-    .from('reservations')
-    .select('*')
-    .order('arriveDate', { ascending: true });
-
-  if (error) {
-    throw error;
-  }
-
-  return data ?? [];
+  return await trySelectReservations();
 }
 
 export async function addRemoteReservation(reservation: Reservation): Promise<Reservation> {
@@ -81,16 +166,7 @@ export async function addRemoteReservation(reservation: Reservation): Promise<Re
     throw new Error('Supabase nije konfiguriran.');
   }
 
-  const { data, error } = await supabaseClient
-    .from('reservations')
-    .insert(reservation)
-    .single();
-
-  if (error) {
-    throw error;
-  }
-
-  return data;
+  return await tryInsertReservation(reservation);
 }
 
 export async function updateRemoteReservation(reservation: Reservation): Promise<Reservation> {
@@ -98,17 +174,7 @@ export async function updateRemoteReservation(reservation: Reservation): Promise
     throw new Error('Supabase nije konfiguriran.');
   }
 
-  const { data, error } = await supabaseClient
-    .from('reservations')
-    .update(reservation)
-    .eq('id', reservation.id)
-    .single();
-
-  if (error) {
-    throw error;
-  }
-
-  return data;
+  return await tryUpdateReservation(reservation);
 }
 
 export async function deleteRemoteReservation(id: string): Promise<void> {
