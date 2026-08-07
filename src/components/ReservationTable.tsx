@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { getTodayLocalDateString } from '../utils/date';
 import type { Reservation } from '../types';
 
 interface ReservationTableProps {
@@ -16,7 +17,7 @@ export function ReservationTable({ reservations, isAdmin, onEdit, onDelete, onCo
   const [sortKey, setSortKey] = useState<SortKey>('arriveDate');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = getTodayLocalDateString();
 
   const filtered = useMemo(() => {
     const query = searchText.trim().toLowerCase();
@@ -55,7 +56,7 @@ export function ReservationTable({ reservations, isAdmin, onEdit, onDelete, onCo
   };
 
   return (
-    <div className="rounded-[2rem] bg-white p-4 shadow-soft ring-1 ring-slate-200">
+    <div className="rounded-[2rem] bg-white p-4 shadow-soft ring-1 ring-slate-200 min-w-0">
       <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-xl font-semibold text-slate-900">Popis rezervacija</h2>
@@ -90,7 +91,7 @@ export function ReservationTable({ reservations, isAdmin, onEdit, onDelete, onCo
         </button>
       </div>
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
+        <table className="w-full divide-y divide-slate-200 text-left text-sm">
           <thead className="bg-slate-50">
             <tr>
               <th className="px-4 py-3 font-medium text-slate-600">Pozicija</th>
