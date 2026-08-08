@@ -26,3 +26,14 @@ export interface ReservationFormValues {
   persons: number;
   notes?: string;
 }
+
+export type SpinSide = 'upper' | 'lower';
+
+export interface SpinAnnouncement {
+  id: string;
+  side: SpinSide;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  arrivalDate: string;
+}

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { TransformComponent, TransformWrapper } from 'react-zoom-pan-pinch';
-import type { Position, Reservation } from '../types';
+import type { Position, Reservation, SpinSide } from '../types';
 import { getTodayLocalDateString } from '../utils/date';
 import lakeMap from '../assets/lake-photo.png';
 
@@ -8,10 +8,11 @@ interface MapViewerProps {
   positions: Position[];
   reservations: Reservation[];
   onSelect: (position: Position) => void;
+  onSpinAnnouncement: (side: SpinSide) => void;
   selectedPositionId?: number | null;
 }
 
-export function MapViewer({ positions, reservations, onSelect, selectedPositionId }: MapViewerProps) {
+export function MapViewer({ positions, reservations, onSelect, onSpinAnnouncement, selectedPositionId }: MapViewerProps) {
   const [scale, setScale] = useState(1);
   const today = getTodayLocalDateString();
   const reservedIds = new Set(
@@ -32,6 +33,13 @@ export function MapViewer({ positions, reservations, onSelect, selectedPositionI
           <p className="text-sm text-slate-500">Pritisnite pin kako biste rezervirali ili pogledali detalje.</p>
         </div>
       </div>
+      <button
+        type="button"
+        onClick={() => onSpinAnnouncement('upper')}
+        className="mb-3 flex w-full items-center justify-center rounded-2xl border-2 border-dashed border-emerald-300 bg-emerald-50 px-4 py-3 text-base font-semibold text-emerald-800 transition hover:border-emerald-500 hover:bg-emerald-100"
+      >
+        + Najava spinanja - Gornja strana
+      </button>
       <div className="relative overflow-hidden rounded-[2rem] border border-slate-200 bg-slate-50">
         <TransformWrapper
           initialScale={1}
@@ -74,6 +82,13 @@ export function MapViewer({ positions, reservations, onSelect, selectedPositionI
           </TransformComponent>
         </TransformWrapper>
       </div>
+      <button
+        type="button"
+        onClick={() => onSpinAnnouncement('lower')}
+        className="mt-3 flex w-full items-center justify-center rounded-2xl border-2 border-dashed border-emerald-300 bg-emerald-50 px-4 py-3 text-base font-semibold text-emerald-800 transition hover:border-emerald-500 hover:bg-emerald-100"
+      >
+        + Najava spinanja - Donja strana
+      </button>
     </div>
   );
 }
