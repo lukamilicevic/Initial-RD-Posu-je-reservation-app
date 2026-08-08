@@ -123,7 +123,7 @@ export function HomePage() {
       <div className="mx-auto flex max-w-7xl flex-col gap-10">
         <header className="rounded-[2rem] bg-white p-8 shadow-soft ring-1 ring-slate-200">
           <div className="flex flex-col gap-4 text-center sm:text-left">
-            <p className="text-sm uppercase tracking-[0.3em] text-emerald-600">ŠRD Posušje</p>
+            <p className="text-sm uppercase tracking-[0.3em] text-emerald-600">ŠRD &quot;Braco Vidić&quot; Posušje</p>
             <h1 className="text-4xl font-semibold text-deep-green sm:text-5xl">Rezervacija ribolovnih pozicija</h1>
             <p className="max-w-2xl text-base text-slate-600 sm:text-lg">
               Jednostavno rezervirajte mjesto na jezeru i provjerite dostupnost svih pozicija.
